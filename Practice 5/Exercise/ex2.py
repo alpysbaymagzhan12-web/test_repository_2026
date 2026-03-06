@@ -1,13 +1,4 @@
 import re
-
-
-x = r'ab{2,3}'
-
-
-y = ["abb", "abbb", "abbbb", "ab", "a", "b"]
-
-for s in y:
-    if re.fullmatch(x, s):
-        print(f"'{s}' -> Match")
-    else:
-        print(f"'{s}' -> No match")
+with open('raw.txt', 'r', encoding='utf-8') as f:
+    text = f.read()
+print(re.findall(r"ab{2,3}", text))
