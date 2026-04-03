@@ -1,6 +1,6 @@
 parametrs={
     "host":"localhost",
     "database":"phonebook",
-    "user":"phonebook",
+    "user":"postgres",
     "password":"1234"
 }

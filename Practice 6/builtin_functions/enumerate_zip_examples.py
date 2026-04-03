@@ -1,6 +1,6 @@
 # Example: enumerate and zip
 
-names = ["Ali", "Dana", "Aruzhan"]
+names = ["Ali", "Dana", "Aruzhan","maga"]
 scores = [85, 90, 88]
 
 # enumerate
