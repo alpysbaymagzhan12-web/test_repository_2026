@@ -1,96 +1,82 @@
-# phonebook.py
-import csv
 import psycopg2
-from connect import get_connection
+import csv
+from config import parametrs
 
-def create_table():
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS contacts (
-            id SERIAL PRIMARY KEY,
-            username VARCHAR(50),
-            phone VARCHAR(20)
-        )
-    """)
+def get_conn():
+    return psycopg2.connect(
+        host=parametrs['host'].strip(),
+        database=parametrs['database'].strip(),
+        user=parametrs['user'].strip(),
+        password=parametrs['password'].strip()
+    )
+
+def crate_table():
+    with get_conn() as conn:
+        with conn.cursor() as f:
+            f.execute('''
+                CREATE TABLE IF NOT EXISTS phonebook (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(250),
+                    phone VARCHAR(25)
+                );
+            ''')
+        conn.commit()
+
+def insetr_csv(file):
+    with get_conn() as conn:
+        with conn.cursor() as c:
+            with open(file, 'r', encoding='utf-8') as f:
+                r = csv.reader(f)
+                for row in r:
+                    c.execute("INSERT INTO phonebook (name, phone) VALUES (%s, %s)", row)
+        conn.commit()
+
+def add_contact(name, phone):
+    with get_conn() as conn:
+        with conn.cursor() as throw:
+            throw.execute("INSERT INTO phonebook (name, phone) VALUES (%s, %s)", (name, phone))
+        conn.commit()
+
+def update_contact(name, new_phone):
+    with get_conn() as conn:
+        with conn.cursor() as update:
+            update.execute("UPDATE phonebook SET phone=%s WHERE name=%s", (new_phone, name))
+        conn.commit()
+
+def contact_find(soz):
+    with get_conn() as conn:
+        with conn.cursor() as throw:
+            throw.execute("SELECT * FROM phonebook WHERE name LIKE %s OR phone LIKE %s", (f'%{soz}%', f'{soz}%'))
+            res = throw.fetchall()
+            if res:
+                for row in res: print(row)
+
+def contact_del(name):
+    with get_conn() as conn:
+        with conn.cursor() as throw:
+            throw.execute("DELETE FROM phonebook WHERE name = %s", (name,))
+        conn.commit()
+def see_all():
+    with get_conn() as conn:
+        with conn.cursor()as throw:
+            throw.execute("select*from phonebook")
+            rows=throw.fetchall()
+            for row in rows:
+                print(row)
     conn.commit()
-    cur.close()
-    conn.close()
-
-def insert_from_csv(filename):
-    conn = get_connection()
-    cur = conn.cursor()
-    with open(filename, encoding="utf-8") as f:
-        reader = csv.reader(f)
-        for row in reader:
-            cur.execute("INSERT INTO contacts (username, phone) VALUES (%s, %s)", (row[0], row[1]))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-def insert_from_console():
-    name = input("Enter name: ")
-    phone = input("Enter phone: ")
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("INSERT INTO contacts (username, phone) VALUES (%s, %s)", (name, phone))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-def update_contact():
-    name = input("Enter name to update: ")
-    new_phone = input("Enter new phone: ")
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("UPDATE contacts SET phone=%s WHERE username=%s", (new_phone, name))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-def query_contacts():
-    prefix = input("Enter phone prefix: ")
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM contacts WHERE phone LIKE %s", (prefix + "%",))
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
-    cur.close()
-    conn.close()
-
-def delete_contact():
-    name = input("Enter name to delete: ")
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM contacts WHERE username=%s", (name,))
-    conn.commit()
-    cur.close()
-    conn.close()
 
 def menu():
-    create_table()
+    crate_table()
     while True:
-        print("\nPhoneBook Menu:")
-        print("1. Insert from CSV")
-        print("2. Insert from console")
-        print("3. Update contact")
-        print("4. Query contacts")
-        print("5. Delete contact")
-        print("6. Exit")
-        choice = input("Choose option: ")
-        if choice == "1":
-            insert_from_csv("contacts.csv")
-        elif choice == "2":
-            insert_from_console()
-        elif choice == "3":
-            update_contact()
-        elif choice == "4":
-            query_contacts()
-        elif choice == "5":
-            delete_contact()
-        elif choice == "6":
-            break
+        print("\n1: CSV | 2: Add | 3: Update | 4: Find | 5: Delete |6: See al persons | 0: Exit")
+        sol = input("Choice: ")
+        if sol == '1': insetr_csv('contacts.csv')
+        elif sol == '2': add_contact(input("Name: "), input("Phone: "))
+        elif sol == '3': update_contact(input("Name: "), input("New Phone: "))
+        elif sol == '4': contact_find(input("Search: "))
+        elif sol == '5': contact_del(input("Name: "))
+        elif sol == '6': see_all()
+        elif sol == '0': break
 
 if __name__ == "__main__":
     menu()
