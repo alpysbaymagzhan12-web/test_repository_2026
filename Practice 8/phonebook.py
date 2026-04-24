@@ -26,7 +26,7 @@ def create_table():#------------------------------------------------------------
 def see_phonebook_pr8():#---------------------------------------------------------------------
     with get_con() as conn:
         with conn.cursor() as throw:
-            throw.execute("select*from phonebook")
+            throw.execute("select*from phonebook_pr8")
             rows=throw.fetchall()
             for row in rows:
                 print(row)
